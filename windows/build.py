@@ -2,6 +2,7 @@
 
 import argparse
 import os
+from pathlib import Path
 import re
 import shutil
 import subprocess
@@ -20,8 +21,10 @@ args = parser.parse_args()
 
 # Rust toolchain version to use
 RUST_TOOLCHAIN = 'stable-i686-pc-windows-gnu'
-CARGO = [subprocess.check_output([args.rustup, 'which', '--toolchain', RUST_TOOLCHAIN, 'cargo'],
-                                 universal_newlines=True).strip()]
+CARGO_PATH = subprocess.check_output([args.rustup, 'which', '--toolchain', RUST_TOOLCHAIN, 'cargo'],
+                                     universal_newlines=True).strip()
+RUST_TOOLCHAIN_BIN = Path(CARGO_PATH).parent.absolute()
+os.environ['PATH'] = RUST_TOOLCHAIN_BIN + ':' + os.environ['PATH']
 # Executables to install
 TARGET_DIR = "../target/" + ('release' if args.release else 'debug')
 EXES = {
@@ -63,7 +66,7 @@ def find_depends(exe):
 
 
 # Build application with rustup
-cmd = CARGO + ['build']
+cmd = ['cargo', 'build']
 if args.release:
     cmd.append('--release')
 subprocess.check_call(cmd)
@@ -114,7 +117,7 @@ for i in ADDITIONAL_FILES:
 subprocess.check_call(["glib-compile-schemas", "out/share/glib-2.0/schemas"])
 
 # Extract crate version from cargo
-meta_str = subprocess.check_output(CARGO + ["metadata", "--format-version", "1", "--no-deps"])
+meta_str = subprocess.check_output(["cargo", "metadata", "--format-version", "1", "--no-deps"])
 meta = json.loads(meta_str)
 package = next(i for i in meta['packages'] if i['name'] == 'system76-keyboard-configurator')
 crate_version = package['version']
