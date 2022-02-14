@@ -14,13 +14,14 @@ from zipfile import ZipFile
 parser = argparse.ArgumentParser()
 parser.add_argument('--release', action='store_true')
 parser.add_argument('--sign', action='store_true')
-parser.add_argument('--rustup', default=(f"{os.environ['HOMEDRIVE']}/{os.environ['HOMEPATH']}/.rustup"))
+parser.add_argument('--rustup', default=(f"{os.environ['HOMEDRIVE']}/{os.environ['HOMEPATH']}/.cargo/bin/rustup.exe"))
 parser.add_argument('--wix', default="C:/Program Files (x86)/WiX Toolset v3.11")
 args = parser.parse_args()
 
 # Rust toolchain version to use
 RUST_TOOLCHAIN = 'stable-i686-pc-windows-gnu'
-CARGO = [args.rustup + '/toolchains/stable-i686-pc-windows-gnu/bin/cargo']
+CARGO = [subprocess.check_output([args.rustup, 'which', '--toolchain', RUST_TOOLCHAIN, 'cargo'],
+                                 universal_newlines=True).strip()]
 # Executables to install
 TARGET_DIR = "../target/" + ('release' if args.release else 'debug')
 EXES = {
